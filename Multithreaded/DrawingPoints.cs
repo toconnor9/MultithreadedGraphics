@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Threading;
+using System.Linq;
 
 
 namespace Multithreaded
@@ -62,6 +63,9 @@ namespace Multithreaded
                     curr_pt.Current_Cycle--;
                 }
 
+                // This keeps it from happening all at once
+                // Thread.Sleep(60);
+
                 // Show the current results
                 parms.Picture_to_Draw_On.Image = bmp;
             }
@@ -77,21 +81,63 @@ namespace Multithreaded
             Random rand = new Random();
             int x, y, curr_Cycle;
             int count = 0;
+            int real_count = 0;
             List<MyPoint> myPoints = new List<MyPoint>();
+            MyPoint new_pt = new MyPoint();
 
             
-            while (count < parms.Max_Number_of_Points)
+            while (count < parms.Max_Number_of_Points && real_count < (parms.Max_Number_of_Points * 1.2))
             {
+                real_count++;
+
                 x = rand.Next(0, parms.Picture_to_Draw_On.Width);
                 y = rand.Next(0, parms.Picture_to_Draw_On.Height);
                 curr_Cycle = rand.Next(0, parms.Cycles_to_Disappear);
-                
-                myPoints.Add(new MyPoint(x, y, curr_Cycle));
 
-                count++;
+                new_pt = new MyPoint(x, y, curr_Cycle);
+
+
+                // If this new point isn't too close to any other points already in the list
+                if (CheckIfTheresRoom(new_pt, myPoints, parms.Min_Distance_Apart))
+                {
+                    myPoints.Add(new_pt);
+                
+                    count++;
+                }
             }
 
             return myPoints;
+        }
+
+
+        /// <summary>
+        /// Check if the passed in point is too close to any other points in the list
+        /// </summary>
+        /// <param name="curr_pt"></param>
+        /// <param name="list_of_pts"></param>
+        /// <param name="min_dist"</param>
+        /// <returns></returns>
+        private bool CheckIfTheresRoom(MyPoint curr_pt, List<MyPoint> list_of_pts, double min_dist)
+        {
+            // Get a list of points within the minimum distance side to side and top to bottom
+            List<MyPoint> nearbyPoints = list_of_pts.FindAll(p => Math.Abs(p.X - curr_pt.X) <= min_dist && Math.Abs(p.Y - curr_pt.Y) <= min_dist);
+            bool room_to_breath = true;
+            double dist;
+
+            // Scan the sub-list, if there are any points in the grid 
+            foreach (MyPoint p in nearbyPoints)
+            {
+                dist = p.DistanceFrom(curr_pt);
+                
+                if (dist < min_dist)
+                {
+                    Console.WriteLine($"{curr_pt} and {p} are too close {dist}");
+                    room_to_breath = false;
+                    break;
+                }
+            }
+
+            return room_to_breath;
         }
     }
 }

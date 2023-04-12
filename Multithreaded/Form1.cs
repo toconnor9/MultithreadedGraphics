@@ -33,7 +33,7 @@ namespace Multithreaded
             if (!int.TryParse(txtNumPoints.Text, out points))
                 points = 250;
 
-            drwPts.parms = new DrawingPointsParams(points, cycles, picMain);
+            drwPts.parms = new DrawingPointsParams(points, cycles, picMain, 3);
 
             // Use this if you just want to run the Draw method in the current thread
             // drwPts.Draw();
@@ -47,6 +47,12 @@ namespace Multithreaded
         private void btnEnd_Click(object sender, EventArgs e)
         {
             t.Abort();
+        }
+
+        private void Form1_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (t != null && t.IsAlive)
+                t.Abort();
         }
     }
 }
